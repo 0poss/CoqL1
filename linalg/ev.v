@@ -73,23 +73,57 @@ Module Exercise2.
 
     Definition vec_constant {n : nat} (c : F) : vec n := Vector.const c n.
 
-    Local Instance vec_zero {n : nat} : Zero (vec n) := Vector.const 0 n.
+    Instance vec_zero {n : nat} : Zero (vec n) := Vector.const 0 n.
 
-    Local Instance vec_eq {n : nat} : Equiv (vec n) :=
+    Instance vec_eq {n : nat} : Equiv (vec n) :=
       fold_right2 (fun α β S => α = β /\ S) True n.
 
     Instance: forall {n : nat}, Reflexive (vec_eq (n := n)).
     Proof.
       intros n x.
       induction x.
-      - simpl. trivial.
+      - simpl. apply I.
       - split; [reflexivity | assumption].
     Qed.
 
+    (* If you're reading this on HEAD, please help me replace this [≡] into a [=] *)
     Lemma vec_n0_eq_empty : forall (v : vec 0), v ≡ [].
     Proof.
       apply case0.
       reflexivity.
+    Qed.
+
+    Lemma vec_cons_eq : forall {n : nat} (u v : vec n) (α β : F), (α::u = β::v) <-> α = β /\ u = v.
+    Proof.
+      easy.
+    Qed.
+
+    (* If you're reading this on HEAD, please help me replace this [≡] into a [=] *)
+    Lemma vec_exists_head : forall {n : nat} (v : vec (S n)), exists (hd : F) (tl : vec n), hd::tl ≡ v.
+    Proof.
+    Admitted.
+
+    Instance: forall {n : nat}, Symmetric (vec_eq (n := n)).
+    Proof.
+      intros n x y Heq.
+      induction n.
+      - rewrite (vec_n0_eq_empty x), (vec_n0_eq_empty y).
+        reflexivity.
+      - specialize (vec_exists_head x) as [x0 [xt Heq_xht]].
+        specialize (vec_exists_head y) as [y0 [yt Heq_yht]].
+        rewrite <- Heq_xht in *.
+        rewrite <- Heq_yht in *.
+        (* You know when you have this feeling that you're doing something wrong,
+           but you have no clue what this is ? *)
+        apply vec_cons_eq.
+        split.
+        all:destruct (vec_cons_eq xt yt x0 y0) as [H0 Hosef].
+        -- pose proof (H0 Heq) as [Hs _].
+           symmetry in Hs.
+           assumption.
+        -- pose proof (H0 Heq) as [_ Hs].
+           specialize (IHn xt yt Hs).
+           assumption.
     Qed.
   End i.
 
