@@ -57,10 +57,14 @@ Module Exercise1.
 End Exercise1.
 
 Module Exercise2.
-  Require Import
-    Coq.Vectors.Vector
-    MathClasses.theory.dec_fields
-    Field.
+  Module i.
+    Require Import
+      Coq.Vectors.Vector
+      MathClasses.theory.dec_fields
+      Field.
+    Import VectorNotations.
+
+    Open Scope vector_scope.
 
     Context F `{DecField F}.
     Add Field F: (stdlib_field_theory F).
@@ -82,10 +86,10 @@ Module Exercise2.
       - split; [reflexivity | assumption].
     Qed.
 
-    Lemma vec_n0_eq_empty : forall (v : vec 0), v = [].
+    Lemma vec_n0_eq_empty : forall (v : vec 0), v ≡ [].
     Proof.
-      pose (f := fun v => v = []).
-      pose (P := case0 f).
+      apply case0.
+      reflexivity.
     Qed.
   End i.
 
