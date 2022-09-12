@@ -99,32 +99,32 @@ Module Exercise2.
     Qed.
 
     (* If you're reading this on HEAD, please help me replace this [≡] into a [=] *)
-    Lemma vec_exists_head : forall {n : nat} (v : vec (S n)), exists (hd : F) (tl : vec n), hd::tl ≡ v.
+    Lemma vec_exists_head : forall {n : nat} (v : vec (S n)), exists (hd : F) (tl : vec n), v ≡ hd::tl.
     Proof.
-    Admitted.
+      intros.
+      exists (hd v), (tl v).
+      apply eta.
+    Qed.
+
+    Lemma vec0_eq_proper : Proper (equiv ==> equiv ==> flip impl) (vec_eq (n := 0)).
+    Proof.
+      repeat intro.
+      assert (nil F ≡ nil F) by reflexivity.
+      rewrite (case0 (fun v : vec 0 => v ≡ nil F) H3 x).
+      rewrite (case0 (fun v : vec 0 => v ≡ nil F) H3 x0).
+      reflexivity.
+    Qed.
 
     Instance: forall {n : nat}, Symmetric (vec_eq (n := n)).
     Proof.
-      intros n x y Heq.
+      intros n u v Heq.
       induction n.
-      - rewrite (vec_n0_eq_empty x), (vec_n0_eq_empty y).
+      - pose vec0_eq_proper.
+        rewrite (case0 (fun v => v = []) I v), (case0 (fun v => v = []) I u).
         reflexivity.
-      - specialize (vec_exists_head x) as [x0 [xt Heq_xht]].
-        specialize (vec_exists_head y) as [y0 [yt Heq_yht]].
-        rewrite <- Heq_xht in *.
-        rewrite <- Heq_yht in *.
-        (* You know when you have this feeling that you're doing something wrong,
-           but you have no clue what this is ? *)
-        apply vec_cons_eq.
-        split.
-        all:destruct (vec_cons_eq xt yt x0 y0) as [H0 Hosef].
-        -- pose proof (H0 Heq) as [Hs _].
-           symmetry in Hs.
-           assumption.
-        -- pose proof (H0 Heq) as [_ Hs].
-           specialize (IHn xt yt Hs).
-           assumption.
-    Qed.
+      - pose (uncons u).
+        give_up. (* For now... see previous commit for a complete demonstration but much dirtier. *)
+    Admitted.
   End i.
 
 End Exercise2.
