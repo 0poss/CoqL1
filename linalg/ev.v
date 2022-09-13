@@ -58,6 +58,16 @@ End Exercise1.
 
 Module Exercise2.
   Module i.
+    (** The exercice statement is simply (translated) :
+     Prove that the set K^n with the following operations :
+            (x_1, ..., x_n) + (y_1, ..., y_n) = (x_1 + y_1, ..., x_n + y_n)
+         and
+            λ·(x_1, ..., x_n) = (λ × x_1, ..., λ × x_n)
+     is a vector space.
+
+     So I figured that would be the occasion the learn how to properly define Mathclasses structures.
+     That's why this Module is so long, apologies. *)
+    
     Require Import
       Coq.Vectors.Vector
       MathClasses.theory.dec_fields
@@ -84,6 +94,9 @@ Module Exercise2.
     Instance vec_neg {n : nat} : Negate (vec n) :=
       map (fun α => - α).
 
+    Instance vec_scal {n : nat} : ScalarMult F (vec n) :=
+      fun α => map (fun β => α * β).
+
     Instance: forall {n : nat}, Reflexive (vec_eq (n := n)).
     Proof.
       intros n x.
@@ -93,14 +106,10 @@ Module Exercise2.
     Qed.
 
     Lemma vec0_eq_nil : forall v : vec 0, v ≡ [].
-    Proof with reflexivity.
-      apply case0...
-    Qed.
+    Proof with reflexivity. apply case0... Qed.
 
     Lemma vec_cons_eq : forall {n : nat} (u v : vec n) (α β : F), (α::u = β::v) <-> α = β /\ u = v.
-    Proof.
-      split; intros; assumption.
-    Qed.
+    Proof. split; intros; assumption. Qed.
 
     Lemma vec0_eq_proper : Proper (equiv ==> equiv ==> flip impl) (vec_eq (n := 0)).
     Proof.
@@ -151,9 +160,7 @@ Module Exercise2.
     Qed.
 
     Instance: forall {n : nat}, Setoid (vec n).
-    Proof.
-      split; apply _.
-    Qed.
+    Proof. split; apply _. Qed.
 
     Lemma vec0_add_proper : Proper (equiv ==> equiv ==> equiv) (vec_add (n := 0)).
     Proof.
@@ -225,25 +232,124 @@ Module Exercise2.
     Instance: forall {n : nat}, RightIdentity (vec_add (n := n)) vec_zero.
     Proof.
       intros n v.
-      rewrite (commutativity).
+      rewrite commutativity.
       apply left_identity.
     Qed.
         
     Instance: forall {n : nat}, Monoid (vec n).
+    Proof. split; apply _. Qed.
+
+    Instance: forall {n : nat}, Proper (equiv ==> equiv) (vec_neg (n := n)).
     Proof.
-      split; apply _.
+      intros n u v Heq.
+      induction n.
+      - rewrite (vec0_eq_nil u), (vec0_eq_nil v).
+        reflexivity.
+      - rewrite (eta u), (eta v) in *.
+        split.
+        + apply (negate_proper F).(sm_proper).
+          apply Heq.
+        + apply IHn.
+          apply Heq.
+    Qed.  
+
+    Instance: forall {n : nat}, Setoid_Morphism (vec_neg (n := n)).
+    Proof. split; apply _. Qed.
+
+    Instance: forall {n : nat}, LeftInverse (vec_add (n := n)) (vec_neg (n := n)) vec_zero.
+    Proof.
+      intros n v.
+      induction n.
+      - rewrite (vec0_eq_nil v).
+        reflexivity.
+      - rewrite (eta v) in *.
+        split.
+        + apply left_inverse.
+        + apply IHn.
+    Qed.
+
+    Instance: forall {n : nat}, RightInverse (vec_add (n := n)) (vec_neg (n := n)) vec_zero.
+    Proof.
+      intros n v.
+      rewrite commutativity.
+      apply left_inverse.
     Qed.
 
     Instance: forall {n : nat}, Group (vec n).
-    Proof.
-      split.
-      apply _.
-    Abort.
+    Proof. split; apply _. Qed.
     
     Instance: forall {n : nat}, AbGroup (vec n).
+    Proof. split; apply _. Qed.
+
+    Instance: forall {n : nat}, LeftHeteroDistribute (vec_scal (n := n)) (vec_add (n := n)) (vec_add (n := n)).
     Proof.
-      split.
-    Abort.
+      intros n α u v.
+      induction n.
+      - rewrite (vec0_eq_nil u), (vec0_eq_nil v).
+        reflexivity.
+      - rewrite (eta u), (eta v).
+        split.
+        + apply distribute_l.
+        + apply IHn.
+    Qed.
+
+    (* Is there a Lemma I can prove to "automate" this ? Besides using Ltac. *)
+    Instance: forall {n : nat}, RightHeteroDistribute (vec_scal (n := n)) (+) (vec_add (n := n)).
+    Proof.
+      intros n α β v.
+      induction n.
+      - rewrite (vec0_eq_nil v).
+        reflexivity.
+      - rewrite (eta v).
+        split.
+        + apply distribute_r.
+        + apply IHn.
+    Qed.
+
+    Instance: forall {n : nat}, HeteroAssociative (vec_scal (n := n)) (vec_scal (n := n)) (vec_scal (n := n)) mult.
+    Proof.
+      intros n α β v.
+      induction n.
+      - rewrite (vec0_eq_nil v).
+        reflexivity.
+      - rewrite (eta v).
+        split.
+        + apply associativity.
+        + apply IHn.
+    Qed.
+
+    Instance: forall {n : nat}, LeftIdentity (vec_scal (n := n)) 1.
+    Proof.
+      intros n v.
+      induction n.
+      - rewrite (vec0_eq_nil v).
+        reflexivity.
+      - rewrite (eta v).
+        split.
+        + apply left_identity.
+        + apply IHn.
+    Qed.
+
+    Instance: forall {n : nat}, Proper (equiv ==> equiv ==> equiv) (vec_scal (n := n)).
+    Proof.
+      intros n α β Heq_αβ u v Heq_uv.
+      induction n.
+      - rewrite (vec0_eq_nil u), (vec0_eq_nil v).
+        reflexivity.
+      - rewrite (eta u), (eta v) in *.
+        split.
+        + apply sg_op_proper.
+          * exact Heq_αβ.
+          * apply Heq_uv.
+        + apply IHn.
+          apply Heq_uv.
+    Qed.
+
+    Instance: forall {n : nat}, Module F (vec n).
+    Proof. split; apply _. Qed.
+
+    Instance: forall {n : nat}, VectorSpace F (vec n).
+    Proof. split; apply _. Qed.
   End i.
 
 End Exercise2.
