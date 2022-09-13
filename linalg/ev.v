@@ -78,12 +78,23 @@ Module Exercise2.
     Instance vec_eq {n : nat} : Equiv (vec n) :=
       fold_right2 (fun α β S => α = β /\ S) True n.
 
+    Instance vec_add {n : nat} : Plus (vec n) :=
+      map2 (fun α β => α + β).
+
+    Instance vec_neg {n : nat} : Negate (vec n) :=
+      map (fun α => - α).
+
     Instance: forall {n : nat}, Reflexive (vec_eq (n := n)).
     Proof.
       intros n x.
       induction x.
       - simpl. apply I.
       - split; [reflexivity | assumption].
+    Qed.
+
+    Lemma vec0_eq_nil : forall v : vec 0, v ≡ [].
+    Proof with reflexivity.
+      apply case0...
     Qed.
 
     Lemma vec_cons_eq : forall {n : nat} (u v : vec n) (α β : F), (α::u = β::v) <-> α = β /\ u = v.
@@ -95,8 +106,7 @@ Module Exercise2.
     Proof.
       repeat intro.
       assert (nil F ≡ nil F) by reflexivity.
-      rewrite (case0 (fun v : vec 0 => v ≡ nil F) H3 x).
-      rewrite (case0 (fun v : vec 0 => v ≡ nil F) H3 x0).
+      rewrite (vec0_eq_nil x), (vec0_eq_nil x0).
       reflexivity.
     Qed.
 
@@ -105,7 +115,7 @@ Module Exercise2.
       intros n u v Heq.
       induction n.
       - pose vec0_eq_proper.
-        rewrite (case0 (fun v => v = []) I v), (case0 (fun v => v = []) I u).
+        rewrite (vec0_eq_nil v), (vec0_eq_nil u).
         reflexivity.
       - rewrite (eta u), (eta v) in *.
         apply vec_cons_eq.
@@ -124,7 +134,7 @@ Module Exercise2.
       (* Maybe I'll avoid writing a [vec_eq_ind] function eternally *)
       induction n.
       - pose vec0_eq_proper as Hp.
-        rewrite (case0 (fun v => v = []) I u), (case0 (fun v => v = []) I v) in *.
+        rewrite (vec0_eq_nil u), (vec0_eq_nil v) in *.
         exact Heq_vz.
       - rewrite (eta u), (eta v), (eta z) in *.
         destruct (vec_cons_eq (tl u) (tl v) (hd u) (hd v)) as [Hi_uv _].
@@ -144,6 +154,96 @@ Module Exercise2.
     Proof.
       split; apply _.
     Qed.
+
+    Lemma vec0_add_proper : Proper (equiv ==> equiv ==> equiv) (vec_add (n := 0)).
+    Proof.
+      repeat intro.
+      assert (nil F ≡ nil F) by reflexivity.
+      rewrite (vec0_eq_nil x),
+        (vec0_eq_nil x0),
+        (vec0_eq_nil y),
+        (vec0_eq_nil y0).
+      reflexivity.
+    Qed.
+
+    Instance vec_add_commutative {n : nat} : Commutative (vec_add (n := n)).
+    Proof.
+      intros u v.
+      induction n.
+      - pose vec0_add_proper as Hp.
+        rewrite (case0 (fun v => v = []) I v), (vec0_eq_nil u).
+        reflexivity.
+      - rewrite (eta u), (eta v) in *.
+        split.
+        + apply commutativity.
+        + apply IHn.
+    Qed.
+
+    Instance vec_add_associative {n : nat} : Associative (vec_add (n := n)).
+    Proof.
+      intros u v z.
+      induction n.
+      - pose vec0_add_proper as Hp.
+        rewrite (vec0_eq_nil v), (vec0_eq_nil u), (vec0_eq_nil z).
+        reflexivity.
+      - rewrite (eta u), (eta v), (eta z) in *.
+        split.
+        + apply associativity.
+        + apply IHn.
+    Qed.
+
+    Lemma vec_add_proper {n : nat} : Proper (equiv ==> equiv ==> equiv) (vec_add (n := n)).
+    Proof.
+      induction n.
+      - apply vec0_add_proper; assumption.
+      - intros u v Heq_uv x y Heq_xy.
+        rewrite (eta u), (eta v), (eta x), (eta y) in *.
+        split; [apply sg_op_proper | apply IHn];
+          try apply Heq_uv; try apply Heq_xy.
+    Qed.
+          
+    Instance: forall {n : nat}, SemiGroup (vec n).
+    Proof.
+      split.
+      apply _.
+      apply _.
+      apply vec_add_proper.
+    Qed.
+
+    Instance: forall {n : nat}, LeftIdentity (vec_add (n := n)) vec_zero.
+    Proof.
+      intros n v.
+      induction n.
+      - rewrite (vec0_eq_nil v).
+        reflexivity.
+      - rewrite (eta v), (eta vec_zero).
+        split.
+        + group.
+        + apply IHn.
+    Qed.
+
+    Instance: forall {n : nat}, RightIdentity (vec_add (n := n)) vec_zero.
+    Proof.
+      intros n v.
+      rewrite (commutativity).
+      apply left_identity.
+    Qed.
+        
+    Instance: forall {n : nat}, Monoid (vec n).
+    Proof.
+      split; apply _.
+    Qed.
+
+    Instance: forall {n : nat}, Group (vec n).
+    Proof.
+      split.
+      apply _.
+    Abort.
+    
+    Instance: forall {n : nat}, AbGroup (vec n).
+    Proof.
+      split.
+    Abort.
   End i.
 
 End Exercise2.
