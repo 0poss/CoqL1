@@ -139,6 +139,11 @@ Module Exercise2.
           * exact Hs_tl_uv.
           * exact Hs_tl_vz.
     Qed.
+
+    Instance: forall {n : nat}, Setoid (vec n).
+    Proof.
+      split; apply _.
+    Qed.
   End i.
 
 End Exercise2.
