@@ -86,24 +86,10 @@ Module Exercise2.
       - split; [reflexivity | assumption].
     Qed.
 
-    (* If you're reading this on HEAD, please help me replace this [≡] into a [=] *)
-    Lemma vec_n0_eq_empty : forall (v : vec 0), v ≡ [].
-    Proof.
-      apply case0.
-      reflexivity.
-    Qed.
-
     Lemma vec_cons_eq : forall {n : nat} (u v : vec n) (α β : F), (α::u = β::v) <-> α = β /\ u = v.
     Proof.
-      easy.
-    Qed.
-
-    (* If you're reading this on HEAD, please help me replace this [≡] into a [=] *)
-    Lemma vec_exists_head : forall {n : nat} (v : vec (S n)), exists (hd : F) (tl : vec n), v ≡ hd::tl.
-    Proof.
       intros.
-      exists (hd v), (tl v).
-      apply eta.
+      split; intros; assumption.
     Qed.
 
     Lemma vec0_eq_proper : Proper (equiv ==> equiv ==> flip impl) (vec_eq (n := 0)).
@@ -122,9 +108,17 @@ Module Exercise2.
       - pose vec0_eq_proper.
         rewrite (case0 (fun v => v = []) I v), (case0 (fun v => v = []) I u).
         reflexivity.
-      - pose (uncons u).
-        give_up. (* For now... see previous commit for a complete demonstration but much dirtier. *)
-    Admitted.
+      - rewrite (eta u) in *.
+        rewrite (eta v) in *.
+        apply vec_cons_eq.
+        destruct (vec_cons_eq (tl u) (tl v) (hd u) (hd v)) as [Hi _].
+        pose proof (Hi Heq) as [Hs0 Hs1].
+        split.
+        + symmetry in Hs0.
+          assumption.
+        + apply IHn.
+          assumption.
+    Qed.
   End i.
 
 End Exercise2.
