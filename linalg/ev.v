@@ -88,7 +88,6 @@ Module Exercise2.
 
     Lemma vec_cons_eq : forall {n : nat} (u v : vec n) (α β : F), (α::u = β::v) <-> α = β /\ u = v.
     Proof.
-      intros.
       split; intros; assumption.
     Qed.
 
@@ -108,16 +107,37 @@ Module Exercise2.
       - pose vec0_eq_proper.
         rewrite (case0 (fun v => v = []) I v), (case0 (fun v => v = []) I u).
         reflexivity.
-      - rewrite (eta u) in *.
-        rewrite (eta v) in *.
+      - rewrite (eta u), (eta v) in *.
         apply vec_cons_eq.
         destruct (vec_cons_eq (tl u) (tl v) (hd u) (hd v)) as [Hi _].
-        pose proof (Hi Heq) as [Hs0 Hs1].
+        pose proof (Hi Heq) as [Hs_hd Hs_tl].
         split.
-        + symmetry in Hs0.
-          assumption.
+        + symmetry.
+          exact Hs_hd.
         + apply IHn.
-          assumption.
+          exact Hs_tl.
+    Qed.
+
+    Instance: forall {n : nat}, Transitive (vec_eq (n := n)).
+    Proof.
+      intros n u v z Heq_uv Heq_vz.
+      (* Maybe I'll avoid writing a [vec_eq_ind] function eternally *)
+      induction n.
+      - pose vec0_eq_proper as Hp.
+        rewrite (case0 (fun v => v = []) I u), (case0 (fun v => v = []) I v) in *.
+        exact Heq_vz.
+      - rewrite (eta u), (eta v), (eta z) in *.
+        destruct (vec_cons_eq (tl u) (tl v) (hd u) (hd v)) as [Hi_uv _].
+        destruct (vec_cons_eq (tl v) (tl z) (hd v) (hd z)) as [Hi_vz _].
+        pose proof (Hi_uv Heq_uv) as [Hs_hd_uv Hs_tl_uv].
+        pose proof (Hi_vz Heq_vz) as [Hs_hd_vz Hs_tl_vz].
+        split.
+        + transitivity (hd v).
+          * exact Hs_hd_uv.
+          * exact Hs_hd_vz.
+        + apply IHn with (v := (tl v)).
+          * exact Hs_tl_uv.
+          * exact Hs_tl_vz.
     Qed.
   End i.
 
