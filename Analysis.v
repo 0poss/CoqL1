@@ -43,29 +43,25 @@ Proof.
   by rewrite -mulrA -exprSr.
 Qed.
 
-Lemma one_minus_q_product_development {K : fieldType} (q : K) (n : nat) :
-  (1-q) * SequenceSum (fun (i:nat) => q ^+ i) n = 1 - q ^+ n.+1.
-Proof.
-  rewrite /SequenceSum mulrBl.
-  rewrite {1}sum_extract_fst//.
-  rewrite sum_distrr.
-  rewrite sum_extract_lst//.
-  under (eq_bigr (F1 := fun i => q * q ^+ i)) do rewrite -exprS.
-  rewrite -exprS.
-  rewrite mul1r.
-  by rewrite addrKA.
-Qed.
-
 Lemma GeometricSequence_Sum {K : fieldType} (s : Sequence K) (q : K) :
-  q <> 1 -> GeometricSequence s q -> forall n : nat, SequenceSum s n = s O * (1 - q ^+ n.+1) / (1 - q).
+  1 - q != 0 -> GeometricSequence s q -> forall n : nat, SequenceSum s n = s O * (1 - q ^+ n.+1) / (1 - q).
 Proof.
   move => neq_q1 geo_s n.
   inversion geo_s.
-  clear s0 q0 H0 H1.
+  clear s0 q0 H0 H1 geo_s.
   rewrite /SequenceSum.
-  under eq_bigr => i*.
+  under eq_bigr => *.
     by rewrite (geo_seq_n_term s q)// over.
   rewrite -sum_distrr.
-  rewrite -(mul1r (\sum_(_ <= i < _.+1) _)).
-  have: 1 - q <> 0.
-  rewrite -(mulKf (F := K) (x := 1 - q)).
+  set sum := (\sum_(_ <= i < _.+1) _).
+  rewrite -(mulKf (F := K) (x := 1 - q) _ sum)//.
+  have -> : (1 - q) * sum = 1 - q ^+ n.+1.
+  {
+    rewrite mulrBl.
+    rewrite /sum {1}sum_extract_fst//
+      sum_distrr sum_extract_lst//.
+    under (eq_bigr (F1 := fun _ => _ * _)) do rewrite -exprS.
+    by rewrite -exprS mul1r addrKA.
+  }
+  by rewrite (mulrC (_ ^-1)) mulrA.
+Qed.
