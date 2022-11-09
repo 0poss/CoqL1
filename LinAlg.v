@@ -1,58 +1,61 @@
+Module Exercise1.
+
+(* This exercise was done using MathClasses. I'll stick to mathcomp in the future. *)
+
 Require Import
   MathClasses.interfaces.abstract_algebra
   MathClasses.interfaces.vectorspace
   MathClasses.theory.groups.
 
-Module Exercise1.
-  Lemma f_equiv' `{Equiv A} `{f : A -> A} :
-    f = f -> forall x y, x = y -> f x = f y.
-  Proof.
-    intros.
-    f_equiv.
-    assumption.
-  Qed.
+Lemma f_equiv' `{Equiv A} `{f : A -> A} :
+  f = f -> forall x y, x = y -> f x = f y.
+Proof.
+  intros.
+  f_equiv.
+  assumption.
+Qed.
 
-  Lemma one : forall `{HVS : VectorSpace K V}, forall (u : V), 0 · u = mon_unit.
-  Proof.
-    intros.
-    setoid_rewrite <- left_identity.
-    setoid_rewrite <- left_inverse with (x := 1 · u).
-    setoid_rewrite <- associativity.
-    apply f_equiv'.
-    { cbv; intros ?? Hxy; now rewrite Hxy. }
-    setoid_rewrite <- distribute_r.
-    cbv; now group.
-  Qed.
+Lemma one : forall `{HVS : VectorSpace K V}, forall (u : V), 0 · u = mon_unit.
+Proof.
+  intros.
+  setoid_rewrite <- left_identity.
+  setoid_rewrite <- left_inverse with (x := 1 · u).
+  setoid_rewrite <- associativity.
+  apply f_equiv'.
+  { cbv; intros ?? Hxy; now rewrite Hxy. }
+  setoid_rewrite <- distribute_r.
+  cbv; now group.
+Qed.
 
-  Lemma two : forall `{HVS : VectorSpace K V}, forall (α : K), α · mon_unit = mon_unit.
-  Proof.
-    intros.
-    rewrite <- right_identity.
-    rewrite <- (right_inverse (α · mon_unit)) at 2 3.
-    rewrite associativity.
-    apply (f_equiv' (f := fun v => v & - (α · mon_unit)));
-      [ cbv; intros ?? Hxy; now rewrite Hxy |].
-    rewrite <- distribute_l.
-    pose scalar_mult_proper.
-    rewrite left_identity.
-    reflexivity.
-  Qed.
+Lemma two : forall `{HVS : VectorSpace K V}, forall (α : K), α · mon_unit = mon_unit.
+Proof.
+  intros.
+  rewrite <- right_identity.
+  rewrite <- (right_inverse (α · mon_unit)) at 2 3.
+  rewrite associativity.
+  apply (f_equiv' (f := fun v => v & - (α · mon_unit)));
+    [ cbv; intros ?? Hxy; now rewrite Hxy |].
+  rewrite <- distribute_l.
+  pose scalar_mult_proper.
+  rewrite left_identity.
+  reflexivity.
+Qed.
 
-  Lemma three : forall `{HVS : VectorSpace K V}, forall (u : V), -1 · u = -u.
-  Proof.
-    intros.
-    setoid_rewrite <- right_identity.
-    setoid_rewrite <- (right_inverse u).
-    setoid_rewrite associativity.
-    apply (f_equiv' (f := fun v => v & - u));
-      [ cbv; intros ?? Hxy; now rewrite Hxy |].
-    rewrite left_inverse.
-    rewrite <- (left_identity u (op := (·))) at 2.
-    rewrite <- distribute_r.
-    pose scalar_mult_proper.
-    rewrite left_inverse.
-    apply one.
-  Qed.
+Lemma three : forall `{HVS : VectorSpace K V}, forall (u : V), -1 · u = -u.
+Proof.
+  intros.
+  setoid_rewrite <- right_identity.
+  setoid_rewrite <- (right_inverse u).
+  setoid_rewrite associativity.
+  apply (f_equiv' (f := fun v => v & - u));
+    [ cbv; intros ?? Hxy; now rewrite Hxy |].
+  rewrite left_inverse.
+  rewrite <- (left_identity u (op := (·))) at 2.
+  rewrite <- distribute_r.
+  pose scalar_mult_proper.
+  rewrite left_inverse.
+  apply one.
+Qed.
 
 End Exercise1.
 
@@ -208,7 +211,7 @@ Module Exercise2.
         split; [apply sg_op_proper | apply IHn];
           try apply Heq_uv; try apply Heq_xy.
     Qed.
-          
+    
     Instance: forall {n : nat}, SemiGroup (vec n).
     Proof.
       split.
@@ -235,7 +238,7 @@ Module Exercise2.
       rewrite commutativity.
       apply left_identity.
     Qed.
-        
+    
     Instance: forall {n : nat}, Monoid (vec n).
     Proof. split; apply _. Qed.
 
@@ -353,3 +356,4 @@ Module Exercise2.
   End i.
 
 End Exercise2.
+
